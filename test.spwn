@@ -1,0 +1,12 @@
+import '.'
+
+read = (file: @string = '') => $.readfile('brainfuck/{}.bf'.fmt(file))
+
+bfs = [
+    @brainfuck::new(read('hello_world')), // hello world
+    @brainfuck::new(read('yapi'), timeout = 1), // timeout test
+    @brainfuck::new('+<<<<<<<<<>>>>>>>>>+', length = 5), // length test
+    @brainfuck::new(read('yapi'), bits = 32, native = true), // native test
+]
+
+$.print('\n'.join(bfs.map(v => '{}')).fmt(bfs))
