@@ -119,10 +119,8 @@ natively = (
 
         if result.length > 0 {
             output += '{}{} // {}\n'.fmt([ indent(), result, char ])
-        } else {
-            if !('\t\r\n '.split('') has char) {
-                output += '{}// {}\n'.fmt([ indent(), char ])
-            }
+        } else if !('\t\r\n '.split('') has char) {
+            output += '{}// {}\n'.fmt([ indent(), char ])
         }
 
         // end
