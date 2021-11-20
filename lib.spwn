@@ -1,0 +1,171 @@
+// based on https://github.com/SpeckyYT/CoffeeFuck
+
+interpreter = (
+    instructions: @string,
+    length: @number,
+    bits: @number,
+    timeout: @number,
+    input: [@number],
+) {
+    start = $.time()
+    let output = []
+    let memory = []
+    let loops = []
+    let skip = 0
+    let pos = 0
+    let cell = 0
+    let inputsIndex = 0
+
+    size = 2^bits
+
+    time = () => $.time() - start
+    exceededTimeout = () => time() >= timeout
+
+    spreadMemory = (){
+        while cell >= memory.length {
+            memory.push(0)
+        }
+        while cell < 0 {
+            memory.unshift(0)
+            cell++
+        }
+    }
+
+    while pos < instructions.length && !exceededTimeout() {
+        spreadMemory()
+
+        switch instructions[pos] {
+            case '[':
+                loops.push(pos) if memory[cell] != 0 else skip++,
+            case ']':
+                (pos = loops[loops.length-1]) if memory[cell] != 0 else
+                (skip-- if skip > 0 else loops.pop()),
+        }
+
+        if skip != 0 {
+            pos++
+            continue
+        }
+
+        switch instructions[pos] {
+            case '>':
+                cell++ if cell < length-1 || memory.length < length  else 0,
+            case '<':
+                cell-- if cell > 0 || memory.length < length else 0,
+            case '+': (){
+                memory[cell] = (memory[cell]+1) % size
+            }(),
+            case '-': (){
+                memory[cell] = (memory[cell]-1) % size
+            }(),
+            case '.':
+                output.push(memory[cell]),
+            case ',': (){
+                if input.length < inputsIndex {
+                    memory[cell] = input[inputsIndex] % size
+                    inputsIndex++
+                }
+            }(),
+        }
+
+        spreadMemory()
+
+        pos++
+    }
+
+    return @brainfuck::{
+        output: output,
+        memory: memory,
+        timeout: exceededTimeout(),
+        time: time(),
+    }
+}
+
+natively = (
+    instructions: @string,
+    bits: @number,
+) {
+    let depth = 0
+    let output = ''
+
+    size = 2^bits
+
+    output += 'start = $.time()\n'
+    output += 'let memory = []\n'
+    output += 'let pointer = 0\n'
+    output += 'let output = []\n'
+    output += 'fix_memory = () { while pointer < 0 { memory.unshift(0); pointer++ }; while pointer >= memory.length { memory.push(0) } }\n'
+    output += 'fix_memory()\n'
+
+    indent = (extra: @number = 0) => " " * 2 * (extra+depth)
+
+    for char in instructions.split('') {
+        result = switch char {
+            case '[': (){
+                return 'while memory[pointer] != 0 {'
+            }(),
+            case ']': (){
+                if depth <= 0 { return '' }
+                depth--
+                return '}'
+            }(),
+            case '+': 'memory[pointer] = (memory[pointer]+1) % {}'.fmt(size),
+            case '-': 'memory[pointer] = (memory[pointer]-1) % {}'.fmt(size),
+            case '>': 'pointer++; fix_memory()',
+            case '<': 'pointer--; fix_memory()',
+            case '.': 'output.push(memory[pointer])',
+            else: '',
+        }
+
+        if result.length > 0 {
+            output += '{}{} // {}\n'.fmt([ indent(), result, char ])
+        } else {
+            if !('\t\r\n '.split('') has char) {
+                output += '{}// {}\n'.fmt([ indent(), char ])
+            }
+        }
+
+        // end
+        switch char {
+            case '[': depth++,
+        }
+    }
+
+    while depth > 0 {
+        depth--
+        output += indent() + '}\n'
+    }
+
+    output += 'return @brainfuck::{ output: output, memory: memory, timeout: false, time: $.time() - start }\n'
+
+    return output
+}
+
+type @brainfuck
+impl @brainfuck {
+    new: (
+        instructions: @string = '',
+        length: @number = 2^32-1,
+        bits: @number = 8,
+        timeout: @number = 10^309,
+        input: [@number] = [],
+        native: @bool = false
+    ) {
+        if native {
+            output = natively(
+                instructions = instructions,
+                bits = bits,
+            )
+            $.writefile('native.spwn', output)
+            return import 'native.spwn'
+        } else {
+            return interpreter(
+                instructions = instructions,
+                length = length,
+                bits = bits,
+                timeout = timeout,
+                input = input,
+            )
+        }
+    },
+}
