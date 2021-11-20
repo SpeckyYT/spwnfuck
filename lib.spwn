@@ -147,7 +147,7 @@ impl @brainfuck {
         bits: @number = 8,
         timeout: @number = 10^309,
         input: [@number] = [],
-        native: @bool = false
+        native: @bool = false,
     ) {
         if native {
             output = natively(
