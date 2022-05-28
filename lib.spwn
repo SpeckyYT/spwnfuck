@@ -34,10 +34,10 @@ interpreter = (
     while pos < instructions.length && !exceededTimeout() {
         spreadMemory()
 
-        switch instructions[pos] {
-            case '[':
+        match instructions[pos] {
+            =='[':
                 loops.push(pos) if memory[cell] != 0 else skip++,
-            case ']':
+            ==']':
                 (pos = loops[loops.length-1]) if memory[cell] != 0 else
                 (skip-- if skip > 0 else loops.pop()),
         }
@@ -47,20 +47,20 @@ interpreter = (
             continue
         }
 
-        switch instructions[pos] {
-            case '>':
+        match instructions[pos] {
+            =='>':
                 cell++ if cell < length-1 || memory.length < length  else 0,
-            case '<':
+            =='<':
                 cell-- if cell > 0 || memory.length < length else 0,
-            case '+': (){
+            =='+': (){
                 memory[cell] = (memory[cell]+1) % size
             }(),
-            case '-': (){
+            =='-': (){
                 memory[cell] = (memory[cell]-1) % size
             }(),
-            case '.':
+            =='.':
                 output.push(memory[cell]),
-            case ',': (){
+            ==',': (){
                 if input.length < inputsIndex {
                     memory[cell] = input[inputsIndex] % size
                     inputsIndex++
@@ -100,32 +100,32 @@ natively = (
     indent = (extra: @number = 0) => " " * 2 * (extra+depth)
 
     for char in instructions.split('') {
-        result = switch char {
-            case '[': (){
+        result = match char {
+            =='[': (){
                 return 'while memory[pointer] != 0 {'
             }(),
-            case ']': (){
+            ==']': (){
                 if depth <= 0 { return '' }
                 depth--
                 return '}'
             }(),
-            case '+': 'memory[pointer] = (memory[pointer]+1) % {}'.fmt(size),
-            case '-': 'memory[pointer] = (memory[pointer]-1) % {}'.fmt(size),
-            case '>': 'pointer++; fix_memory()',
-            case '<': 'pointer--; fix_memory()',
-            case '.': 'output.push(memory[pointer])',
+            =='+': 'memory[pointer] = (memory[pointer]+1) % {}'.fmt(size),
+            =='-': 'memory[pointer] = (memory[pointer]-1) % {}'.fmt(size),
+            =='>': 'pointer++; fix_memory()',
+            =='<': 'pointer--; fix_memory()',
+            =='.': 'output.push(memory[pointer])',
             else: '',
         }
 
         if result.length > 0 {
             output += '{}{} // {}\n'.fmt([ indent(), result, char ])
-        } else if !('\t\r\n '.split('') has char) {
+        } else if !(char in '\t\r\n ') {
             output += '{}// {}\n'.fmt([ indent(), char ])
         }
 
         // end
-        switch char {
-            case '[': depth++,
+        match char {
+            =='[': depth++,
         }
     }
 
