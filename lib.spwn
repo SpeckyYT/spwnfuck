@@ -14,14 +14,14 @@ interpreter = (
     let skip = 0
     let pos = 0
     let cell = 0
-    let inputsIndex = 0
+    let inputs_index = 0
 
     size = 2^bits
 
     time = () => $.time() - start
-    exceededTimeout = () => time() >= timeout
+    exceeded_timeout = () => time() >= timeout
 
-    spreadMemory = (){
+    spread_memory = (){
         while cell >= memory.length {
             memory.push(0)
         }
@@ -31,8 +31,8 @@ interpreter = (
         }
     }
 
-    while pos < instructions.length && !exceededTimeout() {
-        spreadMemory()
+    while pos < instructions.length && !exceeded_timeout() {
+        spread_memory()
 
         match instructions[pos] {
             =='[':
@@ -61,14 +61,14 @@ interpreter = (
             =='.':
                 output.push(memory[cell]),
             ==',': (){
-                if input.length < inputsIndex {
-                    memory[cell] = input[inputsIndex] % size
-                    inputsIndex++
+                if input.length < inputs_index {
+                    memory[cell] = input[inputs_index] % size
+                    inputs_index++
                 }
             }(),
         }
 
-        spreadMemory()
+        spread_memory()
 
         pos++
     }
@@ -76,7 +76,7 @@ interpreter = (
     return @brainfuck::{
         output: output,
         memory: memory,
-        timeout: exceededTimeout(),
+        timeout: exceeded_timeout(),
         time: time(),
     }
 }
